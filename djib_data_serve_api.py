@@ -9,11 +9,9 @@ CORS(app, origins=["http://localhost:3476"])
 
 
 # Charger les fichiers CSV
-df_offices = pd.read_csv("./data/MopDatasOffices_202502281210.csv")
-df_taxes = pd.read_csv('./data/AccountingDatasTaxesList_202502281210.csv')
-df_offices_taxes = pd.read_csv('./data/AccountingDatasOfficesTaxes_202502281210.csv')
-
-
+df_offices = pd.read_csv("./data/MopDatasOffices_202503041409.csv")
+df_taxes = pd.read_csv('./data/AccountingDatasTaxesList_202503041409.csv')
+df_offices_taxes = pd.read_csv('./data/AccountingDatasOfficesTaxes_202503041408.csv')
 
 # Assurez-vous que les colonnes utilisées pour la jointure existent
 # df_offices.rename(columns={'CodeOffice': 'codeOffice'}, inplace=True)
@@ -55,7 +53,7 @@ df_offices_taxes = pd.read_csv('./data/AccountingDatasOfficesTaxes_202502281210.
 @app.route('/api/data', methods=['GET'])
 def get_data():
     page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))
+    per_page = int(request.args.get('per_page', 10)) 
     filters = request.args.to_dict()
     
     # Supprimer les paramètres de pagination des filtres
@@ -69,7 +67,7 @@ def get_data():
     
     # Pagination
     total = len(filtered_df)
-    paginated_df = filtered_df.iloc[(page - 1) * per_page: page * per_page]
+    paginated_df = filtered_df.iloc[(page - 1) * per_page: page * per_page] 
     
     return jsonify({
         "total": total,

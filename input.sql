@@ -207,20 +207,37 @@ SELECT
 FROM df_taxes
 WHERE TaxeDescription IS NOT NULL
 
-
--- Total payé POUR un bureau POUR une taxe (ANNUEL...)
+-- Bureaux par Taxe, par Mois
 SELECT 
     CodeOffice,
     CodeTaxe,
-    STRFTIME('%Y', CAST(Date AS DATE)) AS Year,
-    -- STRFTIME('%Y-%W', CAST(Date AS DATE)) AS Week,
-    -- STRFTIME('%Y-%m', CAST(Date AS DATE)) AS Month,
-    -- STRFTIME('%Y-%m-%d', CAST(Date AS DATE)) AS Day,
+    STRFTIME('%Y-%m', CAST(Date AS DATE)) AS Month,
     SUM(AmountPaid) AS TotalAmountPaid
 FROM df_taxes
-WHERE 
-    -- Filtre sur l'année 2024 : YEAR(CAST(Date AS DATE)) = 2024  
-    CodeOffice = 'DJPRT'  -- Filtre sur un bureau spécifique
-    AND CodeTaxe = 'DAL'  -- Filtre sur une taxe spécifique
-GROUP BY CodeOffice, CodeTaxe, Year
-ORDER BY CodeOffice, Year, CodeTaxe;
+GROUP BY CodeOffice, CodeTaxe, Month
+ORDER BY CodeOffice, Month, CodeTaxe
+
+
+-- Recette par Bureaux et par Taxe, reparti par Mois
+SELECT 
+	dt.CodeOffice,
+	(SELECT o.OfficeName 
+	 FROM df_offices_taxes o 
+	 WHERE o.CodeOffice = dt.CodeOffice
+	 LIMIT 1) AS OfficeName,
+	STRFTIME('%Y-%m', CAST(dt.Date AS DATE)) AS Month,
+	dt.CodeTaxe,
+	dt.TaxeDescription,
+	SUM(dt.AmountPaid) AS TotalAmountPaid
+FROM df_taxes dt
+WHERE STRFTIME('%Y', CAST(dt.Date AS DATE)) = 2022
+GROUP BY 
+	dt.CodeOffice, 
+	OfficeName, 
+	STRFTIME('%Y-%m', CAST(dt.Date AS DATE)),
+	dt.CodeTaxe,
+	dt.TaxeDescription
+ORDER BY 
+	dt.CodeOffice, 
+	Month, 
+	dt.CodeTaxe
