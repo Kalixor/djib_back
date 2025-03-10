@@ -241,3 +241,11 @@ ORDER BY
 	dt.CodeOffice, 
 	Month, 
 	dt.CodeTaxe
+
+    DB_CONFIG = {
+    "host": "douane-db.cfi0m28swsnu.us-east-1.rds.amazonaws.com",
+    "user": "douanedb",
+    "password": "sXfJ9KtAF7MJgMQa9*hN",
+    "database": "douanedb",
+    "cursorclass": pymysql.cursors.DictCursor
+}
