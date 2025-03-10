@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import pymysql
 from typing import List, Dict
+import markdown
+from fastapi.responses import HTMLResponse
+
 
 # Connexion aux paramètres de la base de données MySQL sur AWS
 DB_CONFIG = {
@@ -13,6 +17,17 @@ DB_CONFIG = {
 }
 
 app = FastAPI()
+
+# app.mount("/doc", StaticFiles(directory="."), name="docs")
+#  python -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+
+@app.get("/doc", response_class=HTMLResponse)
+def get_documentation():
+    with open("doc.md", "r", encoding="utf-8") as file:
+        md_content = file.read()
+    html_content = markdown.markdown(md_content)
+    return HTMLResponse(content=f"<html><body>{html_content}</body></html>") 
+
 
 # Configuration CORS
 app.add_middleware(
@@ -70,10 +85,11 @@ def get_recettes_par_taxe():
     query = """
        SELECT 
             CodeTaxe,
+            TaxeDescription,
             DATE_FORMAT(Date, '%Y-%m') AS Month,
         SUM(AmountPaid) AS TotalAmountPaid
         FROM douanedb.AccountingDatasTaxesList
-        GROUP BY CodeTaxe, Month
+        GROUP BY CodeTaxe, TaxeDescription, Month
         ORDER BY CodeTaxe, Month;
     """
     return execute_query(query)
@@ -121,7 +137,7 @@ def get_recettes_tic_tva():
     """
     return execute_query(query)
 
-# TABLEAU 5 [1-TIC-TX]: Affiche les bureaux par codeOffice
+# Affiche les bureaux par codeOffice
 @app.get("/bureaux")
 def get_bureaux():
     query = """
@@ -129,6 +145,7 @@ def get_bureaux():
     """
     return execute_query(query)
 
+# Affiche une table de liaison des codeTaxe par TaxeDescription
 @app.get("/taxes")
 def get_taxes():
     query = """
@@ -136,6 +153,7 @@ def get_taxes():
     """
     return execute_query(query)
 
+# Agregation par années
 @app.get("/recettes_annuel")
 def get_recettes_annuel():
     query = """
@@ -149,19 +167,7 @@ def get_recettes_annuel():
     """
     return execute_query(query)
 
-@app.get("/recettes_annuel")
-def get_recettes_annuel():
-    query = """
-        SELECT 
-            DATE_FORMAT(Date, '%Y') AS Year,
-            SUM(TotalAmountPaid) AS TotalAmountPaid,
-            SUM(TotalAmountAssessed) AS TotalAmountAssessed
-        FROM douanedb.AccountingDatasOfficesTaxes
-        GROUP BY Year
-        ORDER BY Year;
-    """
-    return execute_query(query)
-
+# Agregation par mois
 @app.get("/recettes_mensuelle")
 def get_recettes_mensuelle():
     query = """
@@ -175,6 +181,7 @@ def get_recettes_mensuelle():
     """
     return execute_query(query)
 
+# Agregation par semaine
 @app.get("/recettes_hebdo")
 def get_recettes_hebdo():
     query = """
@@ -188,6 +195,7 @@ def get_recettes_hebdo():
     """
     return execute_query(query)
 
+# Agregation par jour
 @app.get("/recettes_jour")
 def get_recettes_jour():
     query = """
